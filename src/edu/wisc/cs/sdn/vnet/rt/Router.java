@@ -120,43 +120,47 @@ public class Router extends Device
 			boolean shouldPacketBeForwarded = true;
 			for (String name : interfaces.keySet()) {   
 			    Iface destIface = interfaces.get(name);
-			    if (!destIface.getName().equals(inIface.getName())) {
-				if (destIface.getIpAddress() == destIP) {
-				    shouldPacketBeForwarded = false;
-				}
+			    if (destIface.getIpAddress() == destIP) {
+				shouldPacketBeForwarded = false;
 			    }
 			}
 
 			if (shouldPacketBeForwarded) {
 			    RouteEntry entry = routeTable.lookup(destIP); 
-			    if (entry != null) {
-				// gateway is not zero then the destination is outside the network
-				// need to use gateway
-				if (entry.getGatewayAddress() != 0) {
-				    destIP = entry.getGatewayAddress();
-				}
-				
-				//Call lookup (ArpCache Class)
-				System.out.println("Dest ip: " + destIP + ", " +  IPv4.fromIPv4Address(destIP) + ", " + Integer.toBinaryString(destIP));
-				ArpEntry arpEntry = arpCache.lookup(destIP);				
+			    
+			    // Check if the packet can be routed somewhere and that the new interface is
+			    // not the same as incomeing interface
+			    if (entry != null && entry.getInterface() != inIface) {
 
-				//This returns an address that will be the destMac
-				//Update the source Mac in the ethernet frame using the Outgoing Inface Mac
+				// Source mac address will be the routers mac address
 				MACAddress sourceMac = entry.getInterface().getMacAddress();
 				String newSourceMac = sourceMac.toString(); 
 				
+				ArpEntry arpEntry = null;
+
+				// gateway is not zero then the destination is outside the network
+				// need to use gateway's mac address
+				if (entry.getGatewayAddress() != 0) {
+				    arpEntry = arpCache.lookup(entry.getGatewayAddress());				
+				    System.out.println("Using the gateway mac address");
+				} else {
+				    arpEntry = arpCache.lookup(destIP);		
+				    System.out.println("Using destination mac address");
+				}
+
+				// This will change based of if we are sending in the network or outside
+				// using the gateway mac address
 				String newDestMac = arpEntry.getMac().toString();
+				
+				//Call lookup (ArpCache Class)
+				System.out.println("Dest ip: " + destIP + ", " +  IPv4.fromIPv4Address(destIP) + ", " + Integer.toBinaryString(destIP));
 				System.out.println("newSourceMac: " + newSourceMac);
 				System.out.println("newDestMac: " + newDestMac);
 
 				etherPacket.setDestinationMACAddress(newDestMac);
 				etherPacket.setSourceMACAddress(newSourceMac);
-				//After all this, call sendPacket(Device Class) 
-				
-				// Avoid routing to the same interface
-				if (entry.getInterface() != inIface) {
-				    this.sendPacket(etherPacket, entry.getInterface());
-				}
+
+				this.sendPacket(etherPacket, entry.getInterface());
 			    }
 			}
 		    }
