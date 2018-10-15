@@ -87,6 +87,8 @@ public class Router extends Device
 	    /********************************************************************/
 	    /* TODO: Handle packets*/
 
+	    System.out.println(etherPacket.getClass().getName());
+	    
 	    if (etherPacket.getEtherType() == Ethernet.TYPE_IPv4) {
 		// Get the payload
 		IPv4 ipv4 = (IPv4) etherPacket.getPayload();
@@ -131,24 +133,14 @@ public class Router extends Device
 			    RouteEntry entry = routeTable.lookup(destIP); 
 			    if (entry != null) {
 				//Call lookup (ArpCache Class)
-				System.out.println("Dest ip: " + destIP + ", " +  IPv4.fromIPv4Address(destIP) + ", " + Integer.toBinaryString(destIP));
-				ArpEntry arpEntry = arpCache.lookup(destIP);
-				
+				ArpEntry destEntry = ArpCache.lookup(entry.getDestinationAddress());
 				//This returns an address that will be the destMac
 				//Update the source Mac in the ethernet frame using the Outgoing Inface Mac
-				MACAddress sourceMac = entry.getInterface().getMacAddress();
-				String newSourceMac = sourceMac.toString(); 
-				
-				String newDestMac = arpEntry.getMac().toString();
-				System.out.println("newSourceMac: " + newSourceMac);
-				System.out.println("newDestMac: " + newDestMac);
-
-				etherPacket.setDestinationMACAddress(newDestMac);
-				etherPacket.setSourceMACAddress(newSourceMac);
+				String newSourceMac = etherPacket.getDestinationMAC().toString(); 
+				Ethernet newPacket = etherPacket.setDestinationMACAddress(destEntry.getMac().toString());
+				newPacket = etherPacket.setSourceMACAddress(newSourceMac);
 				//After all this, call sendPacket(Device Class) 
-				if (entry.getInterface() != inIface) {
-				    this.sendPacket(etherPacket, entry.getInterface());
-				}
+
 			    }
 			}
 		    }

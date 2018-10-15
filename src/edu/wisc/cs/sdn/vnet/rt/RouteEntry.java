@@ -51,8 +51,8 @@ public class RouteEntry
 	public int getGatewayAddress()
 	{ return this.gatewayAddress; }
 
-    public void setGatewayAddress(int gatewayAddress)
-    { this.gatewayAddress = gatewayAddress; }
+        public void setGatewayAddress(int gatewayAddress)
+	{ this.gatewayAddress = gatewayAddress; }
 	
 	/**
 	 * @return subnet mask 
@@ -67,15 +67,15 @@ public class RouteEntry
 	public Iface getInterface()
 	{ return this.iface; }
 
-    public void setInterface(Iface iface)
-    { this.iface = iface; }
+	public void setInterface(Iface iface)
+	{ this.iface = iface; }
 	
-	public String toString()
-	{
+	    public String toString()
+	    {
 		return String.format("%s \t%s \t%s \t%s",
 				IPv4.fromIPv4Address(this.destinationAddress),
 				IPv4.fromIPv4Address(this.gatewayAddress),
 				IPv4.fromIPv4Address(this.maskAddress),
 				this.iface.getName());
-	}
+	    }
 }

@@ -35,15 +35,26 @@ public class RouteTable
 	 */
 	public RouteEntry lookup(int ip)
 	{
-		synchronized(this.entries)
-        {
-			/*****************************************************************/
-			/* TODO: Find the route entry with the longest prefix match      */
-			
-			return null;
-			
-			/*****************************************************************/
-        }
+	    synchronized(this.entries)
+	    {
+		/*****************************************************************/
+		/* TODO: Find the route entry with the longest prefix match      */
+		System.out.println("Inside lookup");
+		System.out.println("Old ip: " + Integer.toBinaryString(ip));
+		int max = Integer.MIN_VALUE;
+		RouteEntry bestEntry = null;
+		for (RouteEntry entry: entries) {
+		    int newSubnetNumber = ip & entry.getMaskAddress();
+		    int oldSubnetNumber = entry.getDestinationAddress() & entry.getMaskAddress();
+		    System.out.println("new subnet number: " + Integer.toBinaryString(newSubnetNumber));
+		    if (newSubnetNumber == oldSubnetNumber && newSubnetNumber > max) {
+			max = newSubnetNumber;
+			bestEntry = entry;
+		    }
+		}
+		return bestEntry;
+		/*****************************************************************/
+	    }
 	}
 	
 	/**
