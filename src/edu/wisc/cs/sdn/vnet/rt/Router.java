@@ -130,10 +130,16 @@ public class Router extends Device
 			if (shouldPacketBeForwarded) {
 			    RouteEntry entry = routeTable.lookup(destIP); 
 			    if (entry != null) {
+				// gateway is not zero then the destination is outside the network
+				// need to use gateway
+				if (entry.getGatewayAddress() != 0) {
+				    destIP = entry.getGatewayAddress();
+				}
+				
 				//Call lookup (ArpCache Class)
 				System.out.println("Dest ip: " + destIP + ", " +  IPv4.fromIPv4Address(destIP) + ", " + Integer.toBinaryString(destIP));
-				ArpEntry arpEntry = arpCache.lookup(destIP);
-				
+				ArpEntry arpEntry = arpCache.lookup(destIP);				
+
 				//This returns an address that will be the destMac
 				//Update the source Mac in the ethernet frame using the Outgoing Inface Mac
 				MACAddress sourceMac = entry.getInterface().getMacAddress();
@@ -146,6 +152,8 @@ public class Router extends Device
 				etherPacket.setDestinationMACAddress(newDestMac);
 				etherPacket.setSourceMACAddress(newSourceMac);
 				//After all this, call sendPacket(Device Class) 
+				
+				// Avoid routing to the same interface
 				if (entry.getInterface() != inIface) {
 				    this.sendPacket(etherPacket, entry.getInterface());
 				}
